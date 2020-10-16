@@ -4,19 +4,9 @@ substitutions:
   device_description: Home Environment
 
 esphome:
-  name: ${device_name}
-  comment: ${device_description}
   platform: ESP32
   board: esp32dev
 
-<<: !include shared/common.yaml
-
-time:
-  - !include shared/time/sync.yaml
-
-binary_sensor:
-  - !include shared/binary_sensor/status.yaml
-
-sensor:
-  - !include shared/sensor/uptime.yaml
-  - !include shared/sensor/wifi_signal.yaml
+packages:
+  wifi: !include shared/wifi.yaml
+  device_base: !include shared/device_base.yaml

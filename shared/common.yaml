@@ -1,9 +1,0 @@
-<<: !include wifi.yaml
-logger:
-api:
-ota:
-text_sensor:
-  - !include text_sensor/version.yaml
-  - !include text_sensor/wifi_info.yaml
-switch:
-  - !include switch/restart.yaml

@@ -4,16 +4,29 @@ substitutions:
   device_description: RBG Matrix Led Notifier
 
 esphome:
-  name: ${device_name}
-  comment: ${device_description}
   platform: ESP8266
   board: nodemcuv2
 
-<<: !include shared/common.yaml
+packages:
+  wifi: !include shared/wifi.yaml
+  device_base: !include shared/device_base.yaml
 
-time:
-  - !include shared/time/sync.yaml
-  
+api:
+  services:
+    - service: start_effect
+      variables:
+        brightness: int
+        effect: string
+        delay: int #ms
+      then:
+        - light.turn_on:
+            id: ws2811_light
+            brightness: !lambda 'return brightness;'
+            effect: !lambda 'return effect;'
+        - delay: !lambda 'return delay;'
+        - light.turn_off:
+            id: ws2811_light
+
 light:
   - platform: fastled_clockless
     id: ws2811_light
@@ -29,7 +42,6 @@ light:
           speed: 10
           width: 50
 binary_sensor:
-  - !include shared/binary_sensor/status.yaml
   - platform: gpio
     name: ${friendly_name} Shutdown Button
     id: shutdown_button
@@ -49,8 +61,6 @@ binary_sensor:
     on_press:
       - logger.log: "Reset"
 sensor:
-  - !include shared/sensor/uptime.yaml
-  - !include shared/sensor/wifi_signal.yaml
   - platform: rotary_encoder
     id: effect_rotary
     name: ${friendly_name} Effect Rotary Encoder

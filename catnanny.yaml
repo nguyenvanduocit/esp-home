@@ -4,19 +4,118 @@ substitutions:
   device_description: The nanny that take care my cat.
 
 esphome:
-  name: ${device_name}
-  comment: ${device_description}
   platform: ESP32
   board: esp32dev
 
-<<: !include shared/common.yaml
+packages:
+  wifi: !include shared/wifi.yaml
+  device_base: !include shared/device_base.yaml
 
-time:
-  - !include shared/time/sync.yaml
+api:
+  services:
+    - service: control_stepper
+      variables:
+        target: int
+      then:
+        - stepper.set_target:
+            id: food_stepper
+            target: !lambda 'return target;'
+    - service: set_speed
+      variables:
+        speed: int
+      then:
+        - stepper.set_speed:
+            id: food_stepper
+            speed: !lambda 'return speed;'
+# This is the number of steps required to open the curtains. Can be either positive or negative numbers. 
+# I hardcoded 0 as the closed point. positive numbers spin the motors to one direction and negative numbers to the other.
+# Change as fits you
+globals:
+   - id: end_stop_open 
+     type: int
+     initial_value: '-3000'
+cover:
+  - platform: template
+    name: ${friendly_name} Food Cover
+    id: food_cover
+    has_position: true
+    optimistic: false
+    open_action:
+      - stepper.set_target:
+          id: food_stepper
+          target: !lambda "return id(end_stop_open);"
+      - while:
+          condition:
+            lambda: |-
+              return id(food_cover).position != 1;
+          then:
+            - cover.template.publish:
+                id: food_cover
+                current_operation: !lambda |-
+                    return COVER_OPERATION_OPENING;
+                position: !lambda 'return (float(float(id(food_stepper).current_position) / float(id(end_stop_open))));'
+            - delay: 1000 ms
+      - cover.template.publish:
+          id: food_cover
+          current_operation: IDLE
+          position: !lambda 'return 1;'
+    close_action:
+      - stepper.set_target:
+          id: food_stepper
+          target: 0
+      - while:
+          condition:
+            lambda: |-
+              return id(food_cover).position != 0;
+          then:
+            - cover.template.publish:
+                id: food_cover
+                current_operation: !lambda |-
+                    return COVER_OPERATION_CLOSING;
+                position: !lambda 'return (float(float(id(food_stepper).current_position) / float(id(end_stop_open))));'
+            - delay: 1000 ms
+      - cover.template.publish:
+          id: food_cover
+          current_operation: IDLE
+          position: !lambda 'return 0;'
+    stop_action:
+      - stepper.set_target:
+          id: food_stepper
+          target: !lambda return id(food_stepper).current_position;
+      - cover.template.publish:
+          id: food_cover
+          current_operation: IDLE
+          position: !lambda 'return (float(float(id(food_stepper).current_position) / float(id(end_stop_open))));'
+    position_action:
+      - stepper.set_target:
+          id: food_stepper
+          target: !lambda return int(id(end_stop_open)*pos);
+      - while:
+          condition:
+            lambda: |-
+              return id(food_cover).position != pos;
+          then:
+            - cover.template.publish:
+                id: food_cover
+                current_operation: !lambda |-
+                  if(pos > id(food_cover).position){
+                    return COVER_OPERATION_OPENING;
+                  } else {
+                    return COVER_OPERATION_CLOSING;
+                  }
+                position: !lambda 'return (float(float(id(food_stepper).current_position) / float(id(end_stop_open))));'
+            - delay: 1000 ms
+      - cover.template.publish:
+          id: food_cover
+          current_operation: IDLE
+          position: !lambda 'return (float(float(id(food_stepper).current_position) / float(id(end_stop_open))));'
 
-binary_sensor:
-  - !include shared/binary_sensor/status.yaml
-
-sensor:
-  - !include shared/sensor/uptime.yaml
-  - !include shared/sensor/wifi_signal.yaml
+stepper:
+  - platform: a4988
+    id: food_stepper
+    step_pin: 14
+    dir_pin: 2
+    sleep_pin: 15
+    max_speed: 250 steps/s
+    acceleration: inf
+    deceleration: inf

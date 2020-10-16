@@ -1,0 +1,23 @@
+esphome:
+  name: ${device_name}
+  comment: ${device_description}
+
+logger:
+ota:
+
+time:
+  - !include shared/time/sync.yaml
+
+text_sensor:
+  - !include text_sensor/version.yaml
+  - !include text_sensor/wifi_info.yaml
+
+switch:
+  - !include switch/restart.yaml
+
+binary_sensor:
+  - !include shared/binary_sensor/status.yaml
+
+sensor:
+  - !include shared/sensor/uptime.yaml
+  - !include shared/sensor/wifi_signal.yaml
