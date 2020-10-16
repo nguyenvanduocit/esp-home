@@ -1,0 +1,128 @@
+substitutions:
+  devicename: matrixnotifier
+  friendly_name: Matrix Notifier
+  device_description: RBG Matrix Led Notifier
+
+esphome:
+  name: $devicename
+  comment: ${device_description}
+  platform: ESP8266
+  board: nodemcuv2
+
+<<: !include common/common.yaml
+
+----
+substitutions:
+  devicename: matrixnotifier
+  friendly_name: Matrix Notifier
+  device_description: RBG Matrix Led Notifier
+
+esphome:
+  name: $devicename
+  comment: ${device_description}
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: on
+  ap:
+    ssid: $devicename
+    password: !secret esphome_backup_ap_password
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+status_led:
+  pin: GPIO2
+# Enable time component for use ha time
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+  
+# Home Asssitance
+switch:
+  - platform: restart
+    id: restart_switch
+    name: "Matrix Notifier Restart"
+  - platform: shutdown
+    id: shutdown_switch
+    name: "Matrix Notifier Shutdown"
+light:
+  - platform: fastled_clockless
+    id: matrix_rgb_light
+    chipset: WS2811
+    pin: D7
+    num_leds: 192
+    rgb_order: RGB
+    name: "FastLED WS2811 Light"
+    effects:
+      - addressable_rainbow:
+      - addressable_rainbow:
+          name: Rainbow Effect With Custom Values
+          speed: 10
+          width: 50
+binary_sensor:
+  - platform: status
+    name: "Matrix Notifier Status"
+  - platform: gpio
+    name: "Shutdown Button"
+    id: shutdown_button
+    pin:
+      number: D3
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - logger.log: "Shutdown"
+      - switch.turn_on: shutdown_switch
+  - platform: gpio
+    id: reset_button
+    name: "Reset Button"
+    pin:
+      number: D4
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - logger.log: "Reset"
+      - switch.turn_off: restart_switch
+sensor:
+  - platform: rotary_encoder
+    id: effect_rotary
+    name: "Effect Rotary Encoder"
+    resolution: 1
+    pin_a: D2
+    pin_b: D1
+  - platform: rotary_encoder
+    id: brightness_rotary
+    resolution: 1
+    name: "Brightness Rotary Encoder"
+    pin_a: D6
+    pin_b: D5
+  # Reports how long the device has been powered (in minutes)
+  - platform: uptime
+    name: ${friendly_name} Uptime
+    id: ${devicename}_uptime
+    filters:
+      - lambda: return x / 60.0;
+    unit_of_measurement: minutes
+  # Reports the WiFi signal strength
+  - platform: wifi_signal
+    name: ${friendly_name} Wifi Signal
+    id: ${devicename}_wifi_signal
+    update_interval: 60s
+text_sensor:
+  # Reports the ESPHome Version with compile date
+  - platform: version
+    name: ${friendly_name} ESPHome Version
+    id: ${devicename}_esphome_version
+  - platform: wifi_info
+    ip_address:
+      name: ${friendly_name} IP Address
+      id: ${devicename}_ip_address

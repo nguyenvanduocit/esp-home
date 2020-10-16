@@ -1,0 +1,6 @@
+<<: !include wifi.yaml
+text_sensor:
+  - !include version.yaml
+  - !include wifi-info.yaml
+switch:
+  - !include restart.yaml
