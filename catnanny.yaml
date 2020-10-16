@@ -1,0 +1,22 @@
+substitutions:
+  device_name: catnanny
+  friendly_name: Cat Nanny
+  device_description: The nanny that take care my cat.
+
+esphome:
+  name: ${device_name}
+  comment: ${device_description}
+  platform: ESP32
+  board: esp32dev
+
+<<: !include common/common.yaml
+
+time:
+  - !include common/time/sync.yaml
+
+binary_sensor:
+  - !include common/binary_sensor/status.yaml
+
+sensor:
+  - !include common/sensor/uptime.yaml
+  - !include common/sensor/wifi_signal.yaml
