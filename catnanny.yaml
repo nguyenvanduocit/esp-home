@@ -11,29 +11,6 @@ packages:
   wifi: !include shared/wifi.yaml
   device_base: !include shared/device_base.yaml
 
-api:
-  services:
-    - service: control_stepper
-      variables:
-        target: int
-      then:
-        - stepper.set_target:
-            id: food_stepper
-            target: !lambda 'return target;'
-    - service: set_speed
-      variables:
-        speed: int
-      then:
-        - stepper.set_speed:
-            id: food_stepper
-            speed: !lambda 'return speed;'
-# This is the number of steps required to open the curtains. Can be either positive or negative numbers. 
-# I hardcoded 0 as the closed point. positive numbers spin the motors to one direction and negative numbers to the other.
-# Change as fits you
-globals:
-   - id: end_stop_open 
-     type: int
-     initial_value: '-3000'
 cover:
   - platform: template
     name: ${friendly_name} Food Cover
@@ -43,7 +20,7 @@ cover:
     open_action:
       - stepper.set_target:
           id: food_stepper
-          target: !lambda "return id(end_stop_open);"
+          target: 1050
       - while:
           condition:
             lambda: |-
@@ -53,7 +30,7 @@ cover:
                 id: food_cover
                 current_operation: !lambda |-
                     return COVER_OPERATION_OPENING;
-                position: !lambda 'return (float(float(id(food_stepper).current_position) / float(id(end_stop_open))));'
+                position: !lambda 'return (float(float(id(food_stepper).current_position) / 1050));'
             - delay: 1000 ms
       - cover.template.publish:
           id: food_cover
@@ -72,7 +49,7 @@ cover:
                 id: food_cover
                 current_operation: !lambda |-
                     return COVER_OPERATION_CLOSING;
-                position: !lambda 'return (float(float(id(food_stepper).current_position) / float(id(end_stop_open))));'
+                position: !lambda 'return (float(float(id(food_stepper).current_position) / 1050));'
             - delay: 1000 ms
       - cover.template.publish:
           id: food_cover
@@ -85,11 +62,11 @@ cover:
       - cover.template.publish:
           id: food_cover
           current_operation: IDLE
-          position: !lambda 'return (float(float(id(food_stepper).current_position) / float(id(end_stop_open))));'
+          position: !lambda 'return (float(float(id(food_stepper).current_position) / 1050));'
     position_action:
       - stepper.set_target:
           id: food_stepper
-          target: !lambda return int(id(end_stop_open)*pos);
+          target: !lambda return int(1050*pos);
       - while:
           condition:
             lambda: |-
@@ -103,19 +80,29 @@ cover:
                   } else {
                     return COVER_OPERATION_CLOSING;
                   }
-                position: !lambda 'return (float(float(id(food_stepper).current_position) / float(id(end_stop_open))));'
+                position: !lambda 'return (float(float(id(food_stepper).current_position) / 1050));'
             - delay: 1000 ms
       - cover.template.publish:
           id: food_cover
           current_operation: IDLE
-          position: !lambda 'return (float(float(id(food_stepper).current_position) / float(id(end_stop_open))));'
+          position: !lambda 'return (float(float(id(food_stepper).current_position) / 1050));'
 
 stepper:
-  - platform: a4988
+  - platform: uln2003
     id: food_stepper
-    step_pin: 14
-    dir_pin: 2
-    sleep_pin: 15
-    max_speed: 250 steps/s
-    acceleration: inf
-    deceleration: inf
+    pin_a: 14
+    pin_b: 27
+    pin_c: 26
+    pin_d: 25
+    max_speed: 200 steps/s
+    sleep_when_done: True
+
+time:
+  - platform: sntp
+    id: feed_timer
+    on_time:
+      - cron: '0 /5 * * * *'
+        then:
+          - cover.open: food_cover
+          - delay: 10s
+          - cover.close: food_cover

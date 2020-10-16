@@ -4,9 +4,10 @@ esphome:
 
 logger:
 ota:
+api:
 
 time:
-  - !include shared/time/sync.yaml
+  - !include time/sync.yaml
 
 text_sensor:
   - !include text_sensor/version.yaml
@@ -16,8 +17,8 @@ switch:
   - !include switch/restart.yaml
 
 binary_sensor:
-  - !include shared/binary_sensor/status.yaml
+  - !include binary_sensor/status.yaml
 
 sensor:
-  - !include shared/sensor/uptime.yaml
-  - !include shared/sensor/wifi_signal.yaml
+  - !include sensor/uptime.yaml
+  - !include sensor/wifi_signal.yaml

@@ -1,0 +1,34 @@
+# https://esphome.io/devices/sonoff_basic.html
+substitutions:
+  device_name: sonoff2
+  friendly_name: Sonoff 2
+  device_description: Wall Fan using sonoff basic 2
+
+esphome:
+  platform: ESP8266
+  board: esp8285
+
+packages:
+  wifi: !include shared/wifi.yaml
+  device_base: !include shared/device_base.yaml
+
+status_led:
+  pin:
+    number: GPIO13
+    inverted: true
+
+binary_sensor:
+  - platform: gpio
+    name: ${device_name} Button
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+      - switch.toggle: relay
+
+switch:
+  - platform: gpio
+    name: ${device_name} Relay
+    id: relay
+    pin: GPIO12

@@ -1,0 +1,38 @@
+substitutions:
+  device_name: homesenses
+  friendly_name: Home Senses
+  device_description: Home senses
+
+esphome:
+  platform: ESP32
+  board: esp32dev
+
+packages:
+  wifi: !include shared/wifi.yaml
+  device_base: !include shared/device_base.yaml
+
+# Main
+esp32_ble_tracker:
+binary_sensor:
+  - platform: ble_presence
+    mac_address: F6:B6:98:A7:B1:4E
+    id: duoc_miband
+    name: ${friendly_name} Duoc's Miband
+
+sensor:
+  - platform: dht
+    pin: 14
+    model: DHT11
+    temperature:
+      name: ${friendly_name} Temperature
+    humidity:
+      name: ${friendly_name} Humidity
+    update_interval: 60s
+  - platform: pulse_width
+    pin: 27
+    name: ${friendly_name} Pulse Width Sensor
+    update_interval: 1000ms
+    accuracy_decimals: 2
+    unit_of_measurement: "ms"
+    filters:
+      - lambda: return x * 1000;

@@ -3,6 +3,7 @@ substitutions:
   friendly_name: Matrix Notifier
   device_description: RBG Matrix Led Notifier
 
+
 esphome:
   platform: ESP8266
   board: nodemcuv2
@@ -11,46 +12,40 @@ packages:
   wifi: !include shared/wifi.yaml
   device_base: !include shared/device_base.yaml
 
-api:
-  services:
-    - service: start_effect
-      variables:
-        brightness: int
-        effect: string
-        delay: int #ms
-      then:
-        - light.turn_on:
-            id: ws2811_light
-            brightness: !lambda 'return brightness;'
-            effect: !lambda 'return effect;'
-        - delay: !lambda 'return delay;'
-        - light.turn_off:
-            id: ws2811_light
-
 light:
   - platform: fastled_clockless
     id: ws2811_light
     chipset: WS2811
     pin: D7
     num_leds: 192
-    rgb_order: RGB
+    rgb_order: BRG
     name: ${friendly_name} WS2811 Light
     effects:
+      - random:
+      - strobe:
+      - addressable_color_wipe:
+      - addressable_flicker:
       - addressable_rainbow:
-      - addressable_rainbow:
-          name: Rainbow Effect With Custom Values
-          speed: 10
-          width: 50
+      - addressable_scan:
+      - addressable_twinkle:
+      - addressable_random_twinkle:
+      - addressable_fireworks:
+      - addressable_fireworks:
+          name: Fireworks Effect With Custom Values
+          update_interval: 32ms
+          spark_probability: 10%
+          use_random_color: true
+          fade_out_rate: 120
 binary_sensor:
   - platform: gpio
-    name: ${friendly_name} Shutdown Button
-    id: shutdown_button
+    name: ${friendly_name} Do Not Disturb
+    id: dnd_button
     pin:
       number: D3
       mode: INPUT_PULLUP
       inverted: True
     on_press:
-      - logger.log: "Shutdown"
+      - logger.log: "Do Not Disturb"
   - platform: gpio
     id: reset_button
     name: ${friendly_name} Reset Button
@@ -73,3 +68,21 @@ sensor:
     name: ${friendly_name} Brightness Rotary Encoder
     pin_a: D6
     pin_b: D5
+    min_value: 0
+    max_value: 100
+    on_value:
+      then:
+        - light.turn_on:
+            id: ws2811_light
+            brightness: !lambda |-
+              return x / 100.0;
+
+i2c:
+  sda: D1
+  scl: D2
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    reset_pin: D0
+    address: 0x3C
