@@ -9,14 +9,14 @@ esphome:
   platform: ESP32
   board: esp32dev
 
-<<: !include common/common.yaml
+<<: !include shared/common.yaml
 
 time:
-  - !include common/time/sync.yaml
+  - !include shared/time/sync.yaml
 
 binary_sensor:
-  - !include common/binary_sensor/status.yaml
+  - !include shared/binary_sensor/status.yaml
 
 sensor:
-  - !include common/sensor/uptime.yaml
-  - !include common/sensor/wifi_signal.yaml
+  - !include shared/sensor/uptime.yaml
+  - !include shared/sensor/wifi_signal.yaml

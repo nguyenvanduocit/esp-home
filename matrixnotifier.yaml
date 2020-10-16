@@ -9,10 +9,10 @@ esphome:
   platform: ESP8266
   board: nodemcuv2
 
-<<: !include common/common.yaml
+<<: !include shared/common.yaml
 
 time:
-  - !include common/time/sync.yaml
+  - !include shared/time/sync.yaml
   
 light:
   - platform: fastled_clockless
@@ -29,7 +29,7 @@ light:
           speed: 10
           width: 50
 binary_sensor:
-  - !include common/binary_sensor/status.yaml
+  - !include shared/binary_sensor/status.yaml
   - platform: gpio
     name: ${friendly_name} Shutdown Button
     id: shutdown_button
@@ -49,8 +49,8 @@ binary_sensor:
     on_press:
       - logger.log: "Reset"
 sensor:
-  - !include common/sensor/uptime.yaml
-  - !include common/sensor/wifi_signal.yaml
+  - !include shared/sensor/uptime.yaml
+  - !include shared/sensor/wifi_signal.yaml
   - platform: rotary_encoder
     id: effect_rotary
     name: ${friendly_name} Effect Rotary Encoder
