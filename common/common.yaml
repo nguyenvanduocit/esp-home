@@ -1,6 +1,12 @@
 <<: !include wifi.yaml
 text_sensor:
-  - !include version.yaml
-  - !include wifi-info.yaml
+  - !include text_sensor/version.yaml
+  - !include text_sensor/wifi_info.yaml
 switch:
-  - !include restart.yaml
+  - !include switch/restart.yaml
+logger:
+api:
+ota:
+time:
+  - platform: homeassistant
+    id: homeassistant_time

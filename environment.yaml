@@ -1,0 +1,22 @@
+substitutions:
+  device_name: environment
+  friendly_name: Environment
+  device_description: Home Environment
+
+esphome:
+  name: ${device_name}
+  comment: ${device_description}
+  platform: ESP32
+  board: esp32dev
+
+<<: !include common/common.yaml
+
+time:
+  - !include common/time/sync.yaml
+
+binary_sensor:
+  - !include common/binary_sensor/status.yaml
+
+sensor:
+  - !include common/sensor/uptime.yaml
+  - !include common/sensor/wifi_signal.yaml
